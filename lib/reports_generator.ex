@@ -1,17 +1,6 @@
 defmodule ReportsGenerator do
   alias ReportsGenerator.Parser
 
-  @available_foods [
-    "açaí",
-    "churrasco",
-    "esfirra",
-    "hambúrguer",
-    "pastel",
-    "pizza",
-    "prato_feito",
-    "sushi"
-  ]
-
   @options [
     "foods",
     "users"
@@ -66,8 +55,8 @@ defmodule ReportsGenerator do
   def fetch_higher_cost({_, _report}, _option), do: {:error, "Invalid option!"}
 
   defp sum_values([id, food_name, price], %{"foods" => foods, "users" => users}) do
-    users = Map.put(users, id, users[id] + price)
-    foods = Map.put(foods, food_name, foods[food_name] + 1)
+    users = Map.put(users, id, nil_to_zero(users[id]) + price)
+    foods = Map.put(foods, food_name, nil_to_zero(foods[food_name]) + 1)
 
     # report
     # |> Map.put("users", users)
@@ -76,11 +65,17 @@ defmodule ReportsGenerator do
     build_report(foods, users)
   end
 
-  defp report_acc do
-    foods = Enum.into(@available_foods, %{}, &{&1, 0})
-    users = Enum.into(1..30, %{}, &{Integer.to_string(&1), 0})
+  defp nil_to_zero(value) do
+    # this function allows a dynamic list with new foods without the need to update the list
+    # not updating it would break the function
+    case value do
+      nil -> 0
+      _ -> value
+    end
+  end
 
-    build_report(foods, users)
+  defp report_acc do
+    build_report(%{}, %{})
   end
 
   defp build_report(foods, users), do: %{"foods" => foods, "users" => users}
