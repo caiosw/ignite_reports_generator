@@ -18,15 +18,29 @@ defmodule ReportsGenerator do
   ]
 
   def build(filename) do
+    result = build_from_one(filename)
+
+    {:ok, result}
+  end
+
+  defp build_from_one(filename) do
     filename
     |> Parser.parse_file()
     |> Enum.reduce(report_acc(), fn line, report -> sum_values(line, report) end)
   end
 
+  def build_from_many(filenames) when not is_list(filenames) do
+    {:error, "Please provide a list of strings"}
+  end
+
+  # it executes in parallel, it's more than 3 times faster
   def build_from_many(filenames) do
-    filenames
-    |> Task.async_stream(&build/1)
-    |> Enum.reduce(report_acc(), fn {:ok, result}, report -> sum_reports(report, result) end)
+    result =
+      filenames
+      |> Task.async_stream(&build_from_one/1)
+      |> Enum.reduce(report_acc(), fn {:ok, result}, report -> sum_reports(report, result) end)
+
+    {:ok, result}
   end
 
   defp sum_reports(
@@ -44,12 +58,12 @@ defmodule ReportsGenerator do
   end
 
   # when is as Elixir's Guard
-  def fetch_higher_cost(report, option) when option in @options do
+  def fetch_higher_cost({:ok, report}, option) when option in @options do
     {:ok, Enum.max_by(report[option], fn {_key, value} -> value end)}
   end
 
   # if option not in @options, match with bellow function
-  def fetch_higher_cost(_report, _option), do: {:error, "Invalid option!"}
+  def fetch_higher_cost({_, _report}, _option), do: {:error, "Invalid option!"}
 
   defp sum_values([id, food_name, price], %{"foods" => foods, "users" => users}) do
     users = Map.put(users, id, users[id] + price)
