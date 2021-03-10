@@ -1,21 +1,14 @@
 # ReportsGenerator
 
-**TODO: Add description**
+This is an Elixir project from Rocketseat's Ignite course (Chapter 1, module 2).
 
-## Installation
+The project's goal is to create a report from:
+- a 300k lines csv with the following columns: user id, food ordered and order price
+- the same file fragmented in 3 CSVs
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `reports_generator` to your list of dependencies in `mix.exs`:
+With this we could see the diference between executing it in a single thread and in multiple threads.
 
-```elixir
-def deps do
-  [
-    {:reports_generator, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/reports_generator](https://hexdocs.pm/reports_generator).
-
+The performance can be meassured executing the following lines:
+- iex -S mix // start the interactive elixir
+- :timer.tc(fn -> ReportsGenerator.build("report_complete.csv") end) // execute it in a single thread, the first value in the tuple is how many microseconds it takes to run
+- :timer.tc(fn -> ReportsGenerator.build_from_many(["report_1.csv", "report_2.csv", "report_3.csv"]) end) // same, but multi thread
